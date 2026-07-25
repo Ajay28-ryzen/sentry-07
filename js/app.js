@@ -5,7 +5,7 @@ const CONFIG = {
   API_BASE: '',            // e.g. 'http://sentry07.local:8000'
   WS_URL: '',               // e.g. 'ws://sentry07.local:8000/ws/alerts'
   VIDEO_FEED_URL: '',       // e.g. 'http://sentry07.local:8000/video_feed'
-  DEMO_MODE: true           // flip to false once the backend above is live
+  DEMO_MODE: false           // flip to false once the backend above is live
 };
 
 /* =====================================================================
