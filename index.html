@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SENTRY-07 · Recon Control</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<!-- ===================== LOGIN SCREEN ===================== -->
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="login-brand">
+      <div class="brand-mark">S07</div>
+      <div>
+        <div class="login-title">SENTRY-07</div>
+        <div class="login-sub">OPERATOR SIGN-IN</div>
+      </div>
+    </div>
+    <form id="loginForm">
+      <div class="field">
+        <label for="loginUser">USERNAME</label>
+        <input type="text" id="loginUser" autocomplete="username" required>
+      </div>
+      <div class="field">
+        <label for="loginPass">PASSWORD</label>
+        <input type="password" id="loginPass" autocomplete="current-password" required>
+      </div>
+      <button type="submit" class="login-btn">SIGN IN</button>
+      <div class="login-error" id="loginError">Invalid credentials. Try again.</div>
+    </form>
+    <div class="login-hint">
+      Demo credentials — <b style="color:var(--text-dim)">admin / sentry07</b><br>
+      This is a client-side gate for testing only. Replace with real backend
+      session auth (e.g. Flask-Login / JWT over HTTPS) before controlling
+      real hardware.
+    </div>
+  </div>
+</div>
+
+<div id="alertBanner">⚠ INTRUDER DETECTED — HUMAN, 94% CONFIDENCE — ZONE 2</div>
+
+<div id="appContent" style="display:none;">
+<div class="wrap">
+
+  <!-- Top bar -->
+  <div class="topbar">
+    <div class="brand">
+      <div class="brand-mark">S07</div>
+      <div class="brand-text">
+        <h1>SENTRY-07</h1>
+        <p id="statusLine">RECON CONTROL · DEMO MODE</p>
+      </div>
+    </div>
+    <div class="topbar-controls">
+      <div class="mode-toggle" role="group" aria-label="Robot mode">
+        <button id="btnAuto" class="active">AUTO</button>
+        <button id="btnManual">MANUAL</button>
+      </div>
+      <div class="pill"><span class="dot ok pulse" id="connDot"></span><span id="connText">LINKED</span></div>
+      <div class="pill">🔋 <span id="battText" style="color:var(--text)">82%</span></div>
+      <button class="chip-btn" id="btnNotify">🔔 ENABLE ALERTS</button>
+      <button class="chip-btn" id="btnLogout">LOG OUT</button>
+    </div>
+  </div>
+
+  <!-- Main grid -->
+  <div class="grid">
+
+    <!-- LEFT COLUMN -->
+    <div class="col-left">
+
+      <div class="panel">
+        <div class="video-wrap" id="videoWrap">
+          <video id="camFeed" autoplay playsinline muted style="display:none;"></video>
+          <canvas id="detectCanvas"></canvas>
+          <div class="video-fallback" id="videoFallback">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M15 10l4.55-2.5A1 1 0 0 1 21 8.4v7.2a1 1 0 0 1-1.45.9L15 14M3 6h10a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z"/></svg>
+            <div class="scan" id="videoFallbackText">NO FEED — TAP "USE MY CAMERA" BELOW TO TEST</div>
+          </div>
+          <div class="bracket tl"></div>
+          <div class="bracket tr"></div>
+          <div class="bracket bl"></div>
+          <div class="bracket br"></div>
+          <div class="video-tag"><span class="dot ok"></span> CAM-01 · RGB</div>
+          <div class="video-timestamp" id="videoClock">00:00:00</div>
+          <div id="detectLayer"></div>
+        </div>
+        <div class="video-controls">
+          <button class="chip-btn" id="btnCamera">🎥 USE MY CAMERA</button>
+          <button class="chip-btn" id="btnThermal">🌡 THERMAL</button>
+          <button class="chip-btn" id="btnRecord">⏺ RECORD</button>
+          <button class="chip-btn" id="btnSnapshot">📷 SNAPSHOT</button>
+          <button class="chip-btn" id="btnDemoAlert" style="margin-left:auto">▲ TRIGGER TEST ALERT</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head"><h2>Drive Control</h2><span class="dial-caption" id="modeCaption">AUTONOMOUS SCAN ACTIVE</span></div>
+        <div class="panel-body" style="display:flex; gap:24px; flex-wrap:wrap; align-items:center; justify-content:center;">
+          <div class="dial-wrap">
+            <div class="dial" id="dial">
+              <svg viewBox="0 0 200 200">
+                <circle cx="100" cy="100" r="92" fill="none" stroke="#1B2740" stroke-width="1.5"/>
+                <circle cx="100" cy="100" r="60" fill="none" stroke="#1B2740" stroke-width="1"/>
+                <text x="100" y="18" fill="#4E6082" font-family="IBM Plex Mono" font-size="10" text-anchor="middle">N</text>
+                <text x="100" y="196" fill="#4E6082" font-family="IBM Plex Mono" font-size="10" text-anchor="middle">S</text>
+                <text x="8" y="104" fill="#4E6082" font-family="IBM Plex Mono" font-size="10">W</text>
+                <text x="185" y="104" fill="#4E6082" font-family="IBM Plex Mono" font-size="10">E</text>
+                <g class="dial-sweep">
+                  <path d="M100 100 L100 8 A92 92 0 0 1 155 26 Z" fill="url(#sweepGrad)"/>
+                </g>
+                <defs>
+                  <linearGradient id="sweepGrad" x1="0" y1="0" x2="1" y2="0">
+                    <stop offset="0%" stop-color="#3FD6B0" stop-opacity="0"/>
+                    <stop offset="100%" stop-color="#3FD6B0" stop-opacity="0.55"/>
+                  </linearGradient>
+                </defs>
+                <g id="headingArrow" transform="rotate(0 100 100)">
+                  <path d="M100 100 L100 42" stroke="#F2A93B" stroke-width="2.5" stroke-linecap="round"/>
+                  <circle cx="100" cy="42" r="4" fill="#F2A93B"/>
+                </g>
+                <circle cx="100" cy="100" r="3" fill="#E8EDF5"/>
+              </svg>
+              <div class="dpad">
+                <button class="dpad-btn up" data-dir="forward" aria-label="Forward">▲</button>
+                <button class="dpad-btn down" data-dir="backward" aria-label="Backward">▼</button>
+                <button class="dpad-btn left" data-dir="left" aria-label="Left">◀</button>
+                <button class="dpad-btn right" data-dir="right" aria-label="Right">▶</button>
+                <button class="dpad-btn stop" data-dir="stop" aria-label="Stop">■</button>
+              </div>
+            </div>
+            <div class="dial-caption" id="dialCaption">Switch to MANUAL to drive</div>
+          </div>
+          <div style="display:flex; flex-direction:column; gap:14px; min-width:200px; flex:1;">
+            <div class="speed-row">
+              <label>SPEED</label>
+              <input type="range" id="speedSlider" min="0" max="100" value="50" disabled>
+              <span class="telem-value" id="speedVal" style="min-width:38px; text-align:right;">50%</span>
+            </div>
+            <div class="integration-note" style="padding:0;">
+              Manual controls POST to <b>/api/move</b> with a direction payload. Autonomous mode ignores drive input and follows the onboard nav stack.
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT COLUMN -->
+    <div class="col-right">
+
+      <div class="panel">
+        <div class="panel-head"><h2>Telemetry</h2><span class="dot ok" style="animation:none"></span></div>
+        <div class="panel-body">
+          <div class="telem-row"><span class="telem-label">Heading</span><span class="telem-value accent" id="telHeading">042°</span></div>
+          <div class="telem-row"><span class="telem-label">Speed</span><span class="telem-value" id="telSpeed">0.0 m/s</span></div>
+          <div class="telem-row"><span class="telem-label">Battery</span><span class="telem-value" id="telBatt">82%</span></div>
+          <div class="telem-row"><span class="telem-label">Uptime</span><span class="telem-value" id="telUptime">00:00:00</span></div>
+
+          <div style="margin-top:14px;">
+            <div class="telem-label" style="margin-bottom:8px;">ULTRASONIC ARRAY</div>
+            <div class="sonar-grid" id="sonarGrid"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head"><h2>AI Detections</h2><span class="telem-label" id="aiStatus">NOT STARTED</span></div>
+        <div class="panel-body">
+          <div class="detect-summary">
+            <div class="detect-badge people"><span class="dcount" id="peopleCount">0</span>People</div>
+            <div class="detect-badge objects"><span class="dcount" id="objectCount">0</span>Objects</div>
+          </div>
+          <div class="detect-list" id="detectList">
+            <div class="detect-empty">Start the camera to begin detection</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel" style="flex:1;">
+        <div class="panel-head"><h2>Event Log</h2><span class="telem-label" id="logCount">0 events</span></div>
+        <div class="log-list" id="logList"></div>
+      </div>
+
+      <div class="panel">
+        <div class="integration-note">
+          <b>BACKEND WIRING</b><br>
+          Set <b>CONFIG.API_BASE</b> and <b>CONFIG.WS_URL</b> at the top of the script, then set <b>DEMO_MODE = false</b>.<br><br>
+          Expected endpoints —<br>
+          GET  /api/status<br>
+          POST /api/move &nbsp;{direction}<br>
+          POST /api/mode &nbsp;{mode}<br>
+          POST /api/thermal {enabled}<br>
+          GET  /video_feed &nbsp;(MJPEG stream)<br>
+          WS &nbsp;&nbsp;&nbsp;/ws/alerts &nbsp;(detection events)
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.20.0/dist/tf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.3/dist/coco-ssd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/blazeface@0.1.0/dist/blazeface.min.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
